@@ -15,8 +15,8 @@
 #include <fileio.h>
 
 // Macros for loading embedded IOP modules
-#define IRX_DEFINE(mod)                                                        \
-  extern unsigned char mod##_irx[] __attribute__((aligned(16)));               \
+#define IRX_DEFINE(mod)                                                                                                                              \
+  extern unsigned char mod##_irx[] __attribute__((aligned(16)));                                                                                     \
   extern uint32_t size_##mod##_irx
 
 // Defines moduleList entry for embedded and external modules
@@ -25,12 +25,19 @@
 // Embedded IOP modules
 IRX_DEFINE(iomanX);
 IRX_DEFINE(fileXio);
+IRX_DEFINE(sio2man);
+IRX_DEFINE(mcman);
+IRX_DEFINE(mcserv);
+IRX_DEFINE(bdm);
+IRX_DEFINE(bdmfs_fatfs);
+IRX_DEFINE(usbd_mini);
+IRX_DEFINE(usbmass_bd_mini);
 IRX_DEFINE(ps2dev9);
+IRX_DEFINE(xfromman);
+IRX_DEFINE(extflash);
 IRX_DEFINE(dvrdrv);
 IRX_DEFINE(dvr);
 IRX_DEFINE(dvrmisc);
-IRX_DEFINE(xfromman);
-IRX_DEFINE(extflash);
 
 typedef struct ModuleListEntry {
   char *name;         // Module name
@@ -41,9 +48,15 @@ typedef struct ModuleListEntry {
 
 // List of modules to load
 static ModuleListEntry moduleList[] = {
-    INT_MODULE(iomanX),   INT_MODULE(fileXio),  INT_MODULE(ps2dev9),
-    INT_MODULE(extflash), INT_MODULE(xfromman), INT_MODULE(dvrdrv),
-    INT_MODULE(dvr),      INT_MODULE(dvrmisc),
+    INT_MODULE(iomanX),    INT_MODULE(fileXio), //
+    INT_MODULE(sio2man),   INT_MODULE(mcman),
+    INT_MODULE(mcserv),                                 //
+    INT_MODULE(bdm),       INT_MODULE(bdmfs_fatfs),     //
+    INT_MODULE(usbd_mini), INT_MODULE(usbmass_bd_mini), //
+    INT_MODULE(ps2dev9),                                //
+    INT_MODULE(extflash),  INT_MODULE(xfromman),        //
+    INT_MODULE(dvrdrv),    INT_MODULE(dvr),
+    INT_MODULE(dvrmisc),
 };
 #define MODULE_COUNT sizeof(moduleList) / sizeof(ModuleListEntry)
 
@@ -95,16 +108,14 @@ int initModules() {
     ret = 0;
     iopret = 0;
 
-    ret = SifExecModuleBuffer(moduleList[i].irx, *moduleList[i].size, 0, NULL,
-                              &iopret);
+    ret = SifExecModuleBuffer(moduleList[i].irx, *moduleList[i].size, 0, NULL, &iopret);
     if (ret >= 0)
       ret = 0;
     if (iopret == 1)
       ret = iopret;
 
     if (ret) {
-      scr_printf("\n\t\tERROR: Failed to initialize module %s: %d\n",
-                 moduleList[i].name, ret);
+      scr_printf("\n\t\tERROR: Failed to initialize module %s: %d\n", moduleList[i].name, ret);
       return ret;
     }
   }
@@ -131,8 +142,7 @@ int custom_sceCdNoticeGameStart(int mode, u32 *result) {
     return 0;
 
   *(u32 *)sCmdSendBuff = mode;
-  if (SifCallRpc(&clientSCmd, CD_SCMD_NOTICE_GAME_START, 0, sCmdSendBuff, 4,
-                 sCmdRecvBuff, 8, NULL, NULL) >= 0) {
+  if (SifCallRpc(&clientSCmd, CD_SCMD_NOTICE_GAME_START, 0, sCmdSendBuff, 4, sCmdRecvBuff, 8, NULL, NULL) >= 0) {
     *result = *(u32 *)UNCACHED_SEG(&sCmdRecvBuff[4]);
     status = *(int *)UNCACHED_SEG(sCmdRecvBuff);
   } else {

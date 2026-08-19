@@ -1,3 +1,6 @@
+#.SILENT:
+GIT_VERSION := $(shell git describe --always --tags --exclude nightly)
+
 # ELF file name
 EE_BIN = dvrp_flasher_unc.elf
 EE_BIN_PKD = dvrp_flasher.elf
@@ -7,10 +10,12 @@ EE_OBJS = main.o init.o
 
 # Base modules
 IRX_FILES += iomanX.irx fileXio.irx
+IRX_FILES += sio2man.irx mcman.irx mcserv.irx
+IRX_FILES += bdm.irx bdmfs_fatfs.irx usbd_mini.irx usbmass_bd_mini.irx
 IRX_FILES += ps2dev9.irx extflash.irx xfromman.irx dvr.irx dvrmisc.irx dvrdrv.irx
 
 # C compiler flags
-EE_CFLAGS := -D_EE -O2 -G0 -Wall $(EE_CFLAGS)
+EE_CFLAGS := -D_EE -O2 -G0 -Wall -DGIT_VERSION="\"${GIT_VERSION}\"" $(EE_CFLAGS)
 
 EE_OBJS_DIR = obj/
 EE_ASM_DIR = asm/
@@ -21,7 +26,6 @@ EE_LDFLAGS += -s
 
 EE_OBJS += $(IRX_FILES:.irx=_irx.o)
 EE_OBJS += $(ELF_FILES:.elf=_elf.o)
-EE_OBJS += $(RES_FILES:.sys=_sys.o)
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
 .PHONY: all clean

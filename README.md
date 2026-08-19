@@ -4,8 +4,8 @@ A utility for flashing DVRP firmware on PSX DESR systems.
 
 ## Usage
 
-1. Place your DVRP firmware file into `xfrom:/DVRP_FIRMWARE.udm`
-2. Run `dvrp_flasher.elf` from anywhere
+1. Place your DVRP firmware file named `DVRP_FIRMWARE.udm` into `xfrom:/DVRP_FIRMWARE.udm`, or onto a USB drive or memory card (in the same directory as `dvrp_flasher.elf`)
+2. Run `dvrp_flasher.elf`
 
 3. The utility will:
    - Switch the PSX into PSX mode and initialize all required IOP modules
