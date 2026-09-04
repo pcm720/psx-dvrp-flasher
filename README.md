@@ -15,8 +15,7 @@ A utility for flashing DVRP firmware on PSX DESR systems.
 4. Upon successful completion, the utility will display:
 ```
 	Success.
-	Hold the power button to turn off the console,
-	 then unplug the console from mains power for the update to take effect
+	The system will reboot in 5 seconds.
 ```
 
 5. Follow the instructions to power cycle the console for the update to take effect.

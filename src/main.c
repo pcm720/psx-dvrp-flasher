@@ -97,21 +97,25 @@ int main(int argc, char *argv[]) {
 
     scr_printf("\r\tChecking for DVRP flash write status: %ld", status);
     if (status == 2) {
+      sceCdInit(SCECdINoD);
       if (0) {
+        // Finish the update
         char inarg[1] = {0};
         char outarg[16] = {0};
-        sceCdInit(SCECdINoD);
         sceCdApplySCmd(0x3D, inarg, sizeof(inarg), outarg);
-        sceCdInit(SCECdEXIT);
       }
-      scr_printf("\n\n\tSuccess.\n\tHold the power button to turn off the "
-                 "console,\n\t then unplug the console from mains power for "
-                 "the update to apply\n");
+      // Reset the DVRP
+      scr_printf("\n\tResetting the DVRP after flashing\n");
+      xdvrpReset(0);
+      sceCdInit(SCECdEXIT);
+      scr_printf("\n\n\tSuccess.\n\tThe system will reboot in 5 seconds.\n");
+      sleep(5);
+      ExecOSD(0, NULL);
       goto fail;
     }
   }
 
 fail:
-  sleep(5);
-  __builtin_trap();
+  sleep(10);
+  ExecOSD(0, NULL);
 }

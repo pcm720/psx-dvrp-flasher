@@ -60,7 +60,8 @@ static ModuleListEntry moduleList[] = {
 };
 #define MODULE_COUNT sizeof(moduleList) / sizeof(ModuleListEntry)
 
-int custom_sceCdNoticeGameStart(int mode, u32 *result);
+int switchPSXMode(int mode);
+int xdvrpReset(uint8_t arg);
 
 // Initializes IOP modules
 int initModules() {
@@ -76,13 +77,11 @@ int initModules() {
   };
   sceSifInitRpc(0);
 
-  // Execute the "notice game start" SCMD to disable the PS2 mode
+  // Disable PS2 mode and reset DVRP before flashing
   sceCdInit(SCECdINoD);
-  u32 stat;
-  int result;
-  do {
-    result = custom_sceCdNoticeGameStart(0, &stat);
-  } while ((result == 0) || (stat & 0x80));
+  switchPSXMode(0);
+  scr_printf("\t\tResetting the DVRP before flashing\n");
+  xdvrpReset(0);
   sceCdInit(SCECdEXIT);
 
   // Reboot the IOP
@@ -122,33 +121,21 @@ int initModules() {
   return 0;
 }
 
-// PSX-only SCMDs
-#define CD_SCMD_NOTICE_GAME_START 0x2F
+#define SCMD_NOTICE_GAME_START 0x29
+#define SCMD_XDVRP_RESET 0x33
 
-// libcdvd externs
-extern int bindSCmd;
-extern SifRpcClientData_t clientSCmd;
-extern int sCmdSemaId;
-extern u8 sCmdRecvBuff[];
-extern u8 sCmdSendBuff[];
-extern int sCmdNum;
-extern int _CdCheckSCmd(int cmd);
+// Switches between the PS2 and PSX modes
+int switchPSXMode(int mode) {
+  uint8_t in[4] = {mode};
+  uint8_t out[16] = {};
+  sceCdApplySCmd(SCMD_NOTICE_GAME_START, in, 4, out);
+  return *(int *)out;
+}
 
-// Enables/disables the "Quit Game" button
-int custom_sceCdNoticeGameStart(int mode, u32 *result) {
-  int status;
-
-  if (_CdCheckSCmd(CD_SCMD_NOTICE_GAME_START) == 0)
-    return 0;
-
-  *(u32 *)sCmdSendBuff = mode;
-  if (SifCallRpc(&clientSCmd, CD_SCMD_NOTICE_GAME_START, 0, sCmdSendBuff, 4, sCmdRecvBuff, 8, NULL, NULL) >= 0) {
-    *result = *(u32 *)UNCACHED_SEG(&sCmdRecvBuff[4]);
-    status = *(int *)UNCACHED_SEG(sCmdRecvBuff);
-  } else {
-    status = 0;
-  }
-
-  SignalSema(sCmdSemaId);
-  return status;
+// Resets the DVRP
+int xdvrpReset(uint8_t iplMode) {
+  uint8_t in[1] = {iplMode};
+  uint8_t out[16] = {};
+  sceCdApplySCmd(SCMD_XDVRP_RESET, in, 1, out);
+  return *(int *)out;
 }
